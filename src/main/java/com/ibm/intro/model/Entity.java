@@ -10,20 +10,29 @@ package com.ibm.intro.model;
 
 import com.ibm.intro.exception.DataStoreException;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * The entity is a wrapper for an object and maintains the locking information.
  *
- * @author Richard Holzeis
  * @param <O> the
+ * @author Richard Holzeis
  */
 public class Entity<O extends AbstractObject> {
 
-	/** the thread holding the lock on the entity. */
+	/**
+	 * the thread holding the lock on the entity.
+	 */
 	private Long threadId;
-	
-	/**  the stored object. */
+
+	/**
+	 * the stored object.
+	 */
 	private O object;
-	
+
+	ReentrantLock lock = new ReentrantLock();
+
 	/**
 	 * Instantiates a new entity.
 	 *
@@ -65,14 +74,22 @@ public class Entity<O extends AbstractObject> {
 		this.threadId = Thread.currentThread().getId();
 		this.object = object;
 	}
-	
+
 	/**
 	 * Tries to acquire a lock for the current thread.
-	 * 
+	 *
 	 * @return true if the lock is granted and false otherwise.
 	 */
-	public synchronized boolean lock() {
+	public synchronized boolean lock(Long wait) {
 		// #task 1: implement me!
+		if (lock.isLocked())
+			return false;
+		try {
+			lock.tryLock(wait, TimeUnit.MILLISECONDS);
+			if (lock.isLocked()) return true;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 	
@@ -82,8 +99,12 @@ public class Entity<O extends AbstractObject> {
 	 * @return true if the relase succeeded and false otherwise.
 	 */
 	public synchronized boolean release() {
-		// #task 1: implement me!
-		return false;
+		if (!lock.isLocked())
+			return false;
+
+		lock.unlock();
+
+		return !lock.isLocked();
 	}
 	
 	/** {@inheritDoc} */
@@ -97,4 +118,6 @@ public class Entity<O extends AbstractObject> {
 	public boolean equals(Object obj) {
 		return this.object.equals(obj);
 	}
+
+
 }

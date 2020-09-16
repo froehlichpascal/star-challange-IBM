@@ -8,16 +8,12 @@
  */
 package com.ibm.intro.dao;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
-
 import com.ibm.intro.exception.DataStoreException;
 import com.ibm.intro.model.AbstractObject;
 import com.ibm.intro.model.Entity;
 import com.ibm.intro.model.EntityState;
+
+import java.util.*;
 
 /**
  * The in memory storage for any kind of AbstractObject e.g. Production.
@@ -46,7 +42,11 @@ public abstract class InMemoryDao<O extends AbstractObject> {
 	 */
 	public boolean lock(String id, Long wait) throws DataStoreException {
 		// #task 1: implement me!
-		return false;
+		if (findEntityById(id).lock(wait)) {
+			return true;
+		} else {
+			throw new DataStoreException("Lock could not be acquired");
+		}
 	}
 
 	/**
@@ -56,7 +56,9 @@ public abstract class InMemoryDao<O extends AbstractObject> {
 	 * @return true or false whether the release was successful or not
 	 */
 	public boolean release(String id) {
-		// #task 1: implement me!
+		if (findEntityById(id).release()) {
+			return true;
+		}
 		return false;
 	}
 
